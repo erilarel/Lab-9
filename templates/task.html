@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Library Catalog</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        #add-book-form {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #aaa;
+        }
+        #add-book-form label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        #add-book-form input[type="text"] {
+            width: 200px;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        #add-book-form button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #add-book-form button:hover {
+            background-color: #367c39;
+        }
+
+        #clear-button {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #clear-button:hover {
+            background-color: #d32f2f;
+        }
+
+        #book-list {
+            margin-top: 20px;
+        }
+        .book-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-style: italic;
+        }
+        .book-item h2 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+        .book-item p {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Личная библиотека</h1>
+
+    <div id="add-book-form">
+        <h2>Прочитанные книги</h2>
+        <form id="new-book-form">
+            <label for="author">Author:</label>
+            <input type="text" id="author" name="author" required>
+
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <button type="button" onclick="addBook()">Add Book</button>
+        </form>
+
+        <button id="clear-button" onclick="clearBooks()">Clear</button>
+    </div>
+
+    <div id="book-list">
+        {% for book in books %}
+            <div class="book-item">
+                <h2>{{ book.name }}</h2>
+                <p><strong>Author:</strong> {{ book.author }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function addBook() {
+            const author = document.getElementById('author').value.trim();
+            const name = document.getElementById('name').value.trim();
+
+            if (!author || !name) {
+                alert("Please fill in both fields.");
+                return;
+            }
+
+            fetch('/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    author: author,
+                    name: name,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const bookList = document.getElementById('book-list');
+                    const newBook = document.createElement('div');
+                    newBook.className = 'book-item';
+                    newBook.innerHTML = `
+                        <h2>${data.book.name}</h2>
+                        <p><strong>Author:</strong> ${data.book.author}</p>
+                    `;
+                    bookList.appendChild(newBook);
+
+                    document.getElementById('author').value = '';
+                    document.getElementById('name').value = '';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function clearBooks() {
+            const bookList = document.getElementById('book-list');
+            bookList.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
